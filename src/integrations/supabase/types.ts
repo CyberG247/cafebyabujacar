@@ -70,6 +70,7 @@ export type Database = {
           customer_phone: string
           delivery_address: string
           delivery_fee: number | null
+          guest_token: string | null
           id: string
           notes: string | null
           payment_status: string | null
@@ -86,6 +87,7 @@ export type Database = {
           customer_phone: string
           delivery_address: string
           delivery_fee?: number | null
+          guest_token?: string | null
           id?: string
           notes?: string | null
           payment_status?: string | null
@@ -102,6 +104,7 @@ export type Database = {
           customer_phone?: string
           delivery_address?: string
           delivery_fee?: number | null
+          guest_token?: string | null
           id?: string
           notes?: string | null
           payment_status?: string | null
@@ -184,7 +187,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_access_order: {
+        Args: { order_id: string; provided_token: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
