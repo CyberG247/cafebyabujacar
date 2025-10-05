@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail } from 'lucide-react';
+import logo from '@/assets/logo.jpg';
 
 const Footer = () => {
   return (
@@ -7,10 +8,16 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="font-serif text-2xl font-bold mb-4 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-              Café By ABUJA CAR
-            </h3>
-            <p className="text-muted-foreground mb-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <img src={logo} alt="Café By ABUJACAR Logo" className="h-16 w-16 object-contain" />
+              <h3 className="font-serif text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                Café By ABUJACAR
+              </h3>
+            </div>
+            <p className="text-muted-foreground mb-2">
+              Where Luxury Meets Flavor
+            </p>
+            <p className="text-muted-foreground">
               Experience premium coffee and dining in the heart of Abuja. Quality, luxury, and exceptional service.
             </p>
           </div>

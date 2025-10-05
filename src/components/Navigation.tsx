@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCart } from '@/contexts/CartContext';
 import { useState } from 'react';
+import logo from '@/assets/logo.jpg';
 
 const Navigation = () => {
   const location = useLocation();
@@ -24,9 +25,10 @@ const Navigation = () => {
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
-            <span className="font-serif text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-              Café By ABUJA CAR
+          <Link to="/" className="flex items-center space-x-3">
+            <img src={logo} alt="Café By ABUJACAR Logo" className="h-12 w-12 object-contain" />
+            <span className="font-serif text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+              Café By ABUJACAR
             </span>
           </Link>
 

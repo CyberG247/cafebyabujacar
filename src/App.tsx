@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { CartProvider } from "@/contexts/CartContext";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import LoadingScreen from "@/components/LoadingScreen";
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import ProductDetail from "./pages/ProductDetail";
@@ -25,6 +26,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <LoadingScreen />
           <BrowserRouter>
             <div className="flex flex-col min-h-screen w-full">
               <Navigation />
