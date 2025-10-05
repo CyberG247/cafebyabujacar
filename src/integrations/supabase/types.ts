@@ -191,6 +191,37 @@ export type Database = {
         Args: { order_id: string; provided_token: string }
         Returns: boolean
       }
+      get_guest_order: {
+        Args: { p_order_id: string; p_token: string }
+        Returns: {
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          delivery_address: string
+          delivery_fee: number
+          id: string
+          notes: string
+          payment_status: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }[]
+      }
+      get_guest_order_items: {
+        Args: { p_order_id: string; p_token: string }
+        Returns: {
+          created_at: string
+          id: string
+          order_id: string
+          product_id: string
+          product_name: string
+          product_price: number
+          quantity: number
+          subtotal: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
