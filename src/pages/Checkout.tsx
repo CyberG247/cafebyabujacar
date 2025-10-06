@@ -8,6 +8,8 @@ import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import PaymentDialog from '@/components/PaymentDialog';
+import Receipt from '@/components/Receipt';
 
 // Validation schema
 const checkoutSchema = z.object({
@@ -34,6 +36,10 @@ const Checkout = () => {
     address: '',
     deliveryOption: 'delivery',
   });
+  const [showPayment, setShowPayment] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [orderData, setOrderData] = useState<any>(null);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,13 +111,11 @@ const Checkout = () => {
         sessionStorage.setItem(`order_${order.id}_token`, guestToken);
       }
 
-      toast({
-        title: 'Order placed successfully!',
-        description: 'Thank you for your order. We will contact you shortly.',
-      });
+      // Store order ID for payment
+      setPendingOrderId(order.id);
       
-      clearCart();
-      navigate('/');
+      // Show payment dialog
+      setShowPayment(true);
     } catch (error) {
       console.error('Error placing order:', error);
       toast({
@@ -120,6 +124,64 @@ const Checkout = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handlePaymentSuccess = async (reference: string) => {
+    if (!pendingOrderId) return;
+
+    try {
+      // Update order payment status
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          payment_status: 'paid',
+          status: 'confirmed',
+        })
+        .eq('id', pendingOrderId);
+
+      if (error) throw error;
+
+      // Prepare receipt data
+      const receiptData = {
+        orderId: pendingOrderId,
+        customerName: formData.name,
+        customerEmail: formData.email,
+        customerPhone: formData.phone,
+        deliveryAddress: formData.address,
+        items: cart.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        subtotal: getCartTotal(),
+        deliveryFee: 500,
+        total: getCartTotal() + 500,
+        paymentMethod: 'Paystack',
+        date: new Date().toLocaleString('en-NG', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+      };
+
+      setOrderData(receiptData);
+      setShowReceipt(true);
+      clearCart();
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast({
+        title: 'Payment Error',
+        description: 'Payment was successful but there was an error updating the order.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleReceiptClose = () => {
+    setShowReceipt(false);
+    navigate('/');
   };
 
   if (cart.length === 0) {
@@ -218,12 +280,32 @@ const Checkout = () => {
           </Card>
 
           <Button type="submit" variant="hero" size="lg" className="w-full">
-            Place Order
+            Proceed to Payment
           </Button>
           <p className="text-sm text-muted-foreground text-center mt-4">
-            Payment will be collected upon delivery
+            Secure payment powered by Paystack
           </p>
         </form>
+
+        {/* Payment Dialog */}
+        <PaymentDialog
+          open={showPayment}
+          onClose={() => setShowPayment(false)}
+          amount={getCartTotal() + 500}
+          email={formData.email}
+          name={formData.name}
+          phone={formData.phone}
+          onSuccess={handlePaymentSuccess}
+        />
+
+        {/* Receipt Dialog */}
+        {orderData && (
+          <Receipt
+            open={showReceipt}
+            onClose={handleReceiptClose}
+            orderData={orderData}
+          />
+        )}
       </div>
     </div>
   );
