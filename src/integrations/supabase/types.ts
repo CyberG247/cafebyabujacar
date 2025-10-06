@@ -222,6 +222,15 @@ export type Database = {
           subtotal: number
         }[]
       }
+      update_order_payment_status: {
+        Args: {
+          p_guest_token: string
+          p_order_id: string
+          p_payment_status: string
+          p_status: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
