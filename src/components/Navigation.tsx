@@ -27,7 +27,7 @@ const Navigation = () => {
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center space-x-3">
             <img src={logo} alt="Café By ABUJACAR Logo" className="h-12 w-12 object-contain" />
-            <span className="font-serif text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+            <span className="font-serif text-xl md:text-2xl font-bold text-primary">
               Café By ABUJACAR
             </span>
           </Link>

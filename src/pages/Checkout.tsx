@@ -63,6 +63,14 @@ const Checkout = () => {
       const deliveryFee = 500;
       const total = subtotal + deliveryFee;
 
+      console.log('Creating order with data:', { 
+        name: formData.name, 
+        email: formData.email,
+        subtotal, 
+        deliveryFee, 
+        total 
+      });
+
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -88,7 +96,12 @@ const Checkout = () => {
         .select()
         .single();
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        throw orderError;
+      }
+
+      console.log('Order created successfully:', order.id);
 
       // Create order items
       const orderItems = cart.map(item => ({
@@ -100,11 +113,18 @@ const Checkout = () => {
         subtotal: item.price * item.quantity,
       }));
 
+      console.log('Creating order items:', orderItems.length);
+
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('Order items error:', itemsError);
+        throw itemsError;
+      }
+
+      console.log('Order items created successfully');
 
       // Store guest token in sessionStorage for future access
       if (guestToken) {
@@ -114,13 +134,15 @@ const Checkout = () => {
       // Store order ID for payment
       setPendingOrderId(order.id);
       
+      console.log('Opening payment dialog');
+      
       // Show payment dialog
       setShowPayment(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error placing order:', error);
       toast({
         title: 'Error placing order',
-        description: 'There was a problem placing your order. Please try again.',
+        description: error.message || 'There was a problem placing your order. Please try again.',
         variant: 'destructive',
       });
     }

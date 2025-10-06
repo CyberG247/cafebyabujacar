@@ -18,11 +18,18 @@ interface PaymentDialogProps {
 const PaymentDialog = ({ open, onClose, amount, email, name, phone, onSuccess }: PaymentDialogProps) => {
   const [selectedMethod, setSelectedMethod] = useState<string>('');
 
+  // Check if Paystack key is configured
+  const paystackPublicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+  
+  if (!paystackPublicKey) {
+    console.error('CRITICAL: Paystack public key is not configured. Please add PAYSTACK_PUBLIC_KEY to your secrets.');
+  }
+
   const config = {
     reference: `CAF-${new Date().getTime()}`,
     email,
     amount: amount * 100, // Paystack expects amount in kobo
-    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '',
+    publicKey: paystackPublicKey || 'pk_test_placeholder',
     metadata: {
       custom_fields: [
         {
@@ -59,7 +66,18 @@ const PaymentDialog = ({ open, onClose, amount, email, name, phone, onSuccess }:
   };
 
   const handlePayment = (method: string) => {
+    if (!paystackPublicKey) {
+      toast({
+        title: 'Payment Configuration Error',
+        description: 'Payment system is not configured. Please contact support.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setSelectedMethod(method);
+    
+    console.log('Initializing payment with method:', method);
     
     initializePayment({
       onSuccess: handlePaymentSuccess,
