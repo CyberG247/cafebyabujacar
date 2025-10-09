@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCart } from '@/contexts/CartContext';
 import { useState } from 'react';
-import logo from '@/assets/logo.jpg';
+import logo from '@/assets/logo.png';
 
 const Navigation = () => {
   const location = useLocation();
