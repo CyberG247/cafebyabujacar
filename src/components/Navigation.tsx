@@ -38,8 +38,8 @@ const Navigation = () => {
               <Link
                 key={link.to}
                 to={link.to}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  isActive(link.to) ? 'text-primary' : 'text-foreground/80'
+                className={`relative text-sm font-semibold transition-all duration-300 hover:text-primary hover:scale-110 after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left ${
+                  isActive(link.to) ? 'text-primary after:scale-x-100' : 'text-foreground/80'
                 }`}
               >
                 {link.label}
@@ -48,7 +48,12 @@ const Navigation = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="hover:rotate-180 transition-transform duration-500"
+            >
               {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
 
@@ -56,7 +61,7 @@ const Navigation = () => {
               <Button variant="ghost" size="icon" className="relative">
                 <ShoppingCart className="h-5 w-5" />
                 {getCartCount() > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold animate-pulse">
                     {getCartCount()}
                   </span>
                 )}
@@ -82,8 +87,8 @@ const Navigation = () => {
                 key={link.to}
                 to={link.to}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block py-2 text-sm font-medium transition-colors hover:text-primary ${
-                  isActive(link.to) ? 'text-primary' : 'text-foreground/80'
+                className={`block py-2 px-4 text-sm font-semibold rounded-md transition-all duration-300 hover:text-primary hover:bg-primary/10 hover:scale-105 hover:translate-x-2 ${
+                  isActive(link.to) ? 'text-primary bg-primary/10' : 'text-foreground/80'
                 }`}
               >
                 {link.label}
