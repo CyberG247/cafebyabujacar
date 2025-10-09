@@ -11,12 +11,30 @@ import { z } from 'zod';
 import PaymentDialog from '@/components/PaymentDialog';
 import Receipt from '@/components/Receipt';
 
-// Validation schema
+// Enhanced validation schema with stricter security rules
 const checkoutSchema = z.object({
-  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
-  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
-  phone: z.string().trim().min(10, "Phone number must be at least 10 characters").max(20, "Phone number must be less than 20 characters"),
-  address: z.string().trim().min(10, "Address must be at least 10 characters").max(500, "Address must be less than 500 characters"),
+  name: z.string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be less than 100 characters")
+    .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, hyphens, and apostrophes"),
+  
+  email: z.string()
+    .trim()
+    .email("Invalid email address")
+    .max(255, "Email must be less than 255 characters")
+    .toLowerCase(),
+  
+  phone: z.string()
+    .trim()
+    .min(10, "Phone number must be at least 10 characters")
+    .max(20, "Phone number must be less than 20 characters")
+    .regex(/^\+?[0-9\s()-]+$/, "Phone number can only contain numbers and basic formatting characters"),
+  
+  address: z.string()
+    .trim()
+    .min(10, "Address must be at least 10 characters")
+    .max(500, "Address must be less than 500 characters"),
 });
 
 // Generate a secure random token for guest orders
@@ -152,16 +170,26 @@ const Checkout = () => {
     if (!pendingOrderId) return;
 
     try {
-      // Update order payment status
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          payment_status: 'paid',
-          status: 'confirmed',
-        })
-        .eq('id', pendingOrderId);
+      // Get guest token from sessionStorage
+      const guestToken = sessionStorage.getItem(`order_${pendingOrderId}_token`);
+      
+      // Use secure RPC function to update order status
+      const { data: success, error } = await supabase.rpc('update_order_payment_status', {
+        p_order_id: pendingOrderId,
+        p_guest_token: guestToken || '',
+        p_payment_status: 'paid',
+        p_status: 'confirmed'
+      });
 
-      if (error) throw error;
+      if (error || !success) {
+        console.error('Payment update error:', error);
+        throw new Error('Failed to update order status');
+      }
+
+      // Clear guest token from sessionStorage for security
+      if (guestToken) {
+        sessionStorage.removeItem(`order_${pendingOrderId}_token`);
+      }
 
       // Prepare receipt data
       const receiptData = {
