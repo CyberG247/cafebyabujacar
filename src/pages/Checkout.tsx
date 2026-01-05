@@ -186,14 +186,13 @@ const Checkout = () => {
         throw new Error('Failed to update order status');
       }
 
-      // Clear guest token from sessionStorage for security
-      if (guestToken) {
-        sessionStorage.removeItem(`order_${pendingOrderId}_token`);
-      }
-
+      // Store tracking info in sessionStorage for the receipt
+      const guestTokenForTracking = sessionStorage.getItem(`order_${pendingOrderId}_token`);
+      
       // Prepare receipt data
       const receiptData = {
         orderId: pendingOrderId,
+        guestToken: guestTokenForTracking,
         customerName: formData.name,
         customerEmail: formData.email,
         customerPhone: formData.phone,

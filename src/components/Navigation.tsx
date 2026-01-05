@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, ShoppingCart, Menu, X } from 'lucide-react';
+import { Moon, Sun, ShoppingCart, Menu, X, Heart, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCart } from '@/contexts/CartContext';
+import { useFavorites } from '@/contexts/FavoritesContext';
 import { useState } from 'react';
 import logo from '@/assets/logo.png';
 
@@ -10,6 +11,7 @@ const Navigation = () => {
   const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
   const { getCartCount } = useCart();
+  const { getFavoritesCount } = useFavorites();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const links = [
@@ -17,6 +19,7 @@ const Navigation = () => {
     { to: '/menu', label: 'Menu' },
     { to: '/about', label: 'About' },
     { to: '/contact', label: 'Contact' },
+    { to: '/track-order', label: 'Track Order' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -56,6 +59,17 @@ const Navigation = () => {
             >
               {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
+
+            <Link to="/favorites">
+              <Button variant="ghost" size="icon" className="relative">
+                <Heart className="h-5 w-5" />
+                {getFavoritesCount() > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
+                    {getFavoritesCount()}
+                  </span>
+                )}
+              </Button>
+            </Link>
 
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="relative">

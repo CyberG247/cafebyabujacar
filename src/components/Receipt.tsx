@@ -1,6 +1,8 @@
+import { Link } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Package } from 'lucide-react';
 import logo from '@/assets/logo.jpg';
 
 interface ReceiptProps {
@@ -8,6 +10,7 @@ interface ReceiptProps {
   onClose: () => void;
   orderData: {
     orderId: string;
+    guestToken?: string;
     customerName: string;
     customerEmail: string;
     customerPhone: string;
@@ -29,6 +32,10 @@ const Receipt = ({ open, onClose, orderData }: ReceiptProps) => {
   const handlePrint = () => {
     window.print();
   };
+
+  const trackingUrl = orderData.guestToken 
+    ? `/track-order?id=${orderData.orderId}&token=${orderData.guestToken}`
+    : `/track-order?id=${orderData.orderId}`;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -135,13 +142,21 @@ const Receipt = ({ open, onClose, orderData }: ReceiptProps) => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 p-4 bg-muted print:hidden">
-          <Button onClick={handlePrint} className="flex-1">
-            Print Receipt
-          </Button>
-          <Button onClick={onClose} variant="outline" className="flex-1">
-            Close
-          </Button>
+        <div className="flex flex-col gap-2 p-4 bg-muted print:hidden">
+          <Link to={trackingUrl} className="w-full">
+            <Button variant="hero" className="w-full">
+              <Package className="h-4 w-4 mr-2" />
+              Track Your Order
+            </Button>
+          </Link>
+          <div className="flex gap-2">
+            <Button onClick={handlePrint} className="flex-1">
+              Print Receipt
+            </Button>
+            <Button onClick={onClose} variant="outline" className="flex-1">
+              Close
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
