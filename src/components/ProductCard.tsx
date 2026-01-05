@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Product } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
+import { useFavorites } from '@/contexts/FavoritesContext';
 
 interface ProductCardProps {
   product: Product;
@@ -11,9 +12,27 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorite = isFavorite(product.id);
 
   return (
-    <Card className="overflow-hidden group hover:shadow-primary transition-smooth">
+    <Card className="overflow-hidden group hover:shadow-primary transition-smooth relative">
+      {/* Favorite Button */}
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          toggleFavorite(product.id);
+        }}
+        className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/80 backdrop-blur hover:bg-background transition-all duration-300 hover:scale-110"
+        aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'}
+      >
+        <Heart
+          className={`h-5 w-5 transition-colors ${
+            favorite ? 'fill-primary text-primary' : 'text-muted-foreground hover:text-primary'
+          }`}
+        />
+      </button>
+
       <Link to={`/product/${product.id}`}>
         <div className="aspect-square overflow-hidden">
           <img
