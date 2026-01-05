@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/ProductCard';
+import ProductRecommendations from '@/components/ProductRecommendations';
 import { products, categories } from '@/lib/products';
 
 const Menu = () => {
@@ -20,6 +21,9 @@ const Menu = () => {
             Explore our selection of premium coffee, meals, and beverages
           </p>
         </div>
+
+        {/* AI Recommendations */}
+        <ProductRecommendations />
 
         {/* Category Filter */}
         <div className="flex flex-wrap justify-center gap-3 mb-12">

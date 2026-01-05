@@ -8,6 +8,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import LoadingScreen from "@/components/LoadingScreen";
+import ChatWidget from "@/components/ChatWidget";
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import ProductDetail from "./pages/ProductDetail";
@@ -43,6 +44,7 @@ const App = () => (
                 </Routes>
               </main>
               <Footer />
+              <ChatWidget />
             </div>
           </BrowserRouter>
         </TooltipProvider>
