@@ -101,7 +101,7 @@ const Navigation = () => {
                 key={link.to}
                 to={link.to}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block py-2 px-4 text-sm font-semibold rounded-md transition-all duration-300 hover:text-primary hover:bg-primary/10 hover:scale-105 hover:translate-x-2 ${
+                className={`block py-3 px-4 text-sm font-semibold rounded-md transition-all duration-300 hover:text-primary hover:bg-primary/10 hover:scale-105 hover:translate-x-2 ${
                   isActive(link.to) ? 'text-primary bg-primary/10' : 'text-foreground/80'
                 }`}
               >

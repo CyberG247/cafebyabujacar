@@ -1,8 +1,4 @@
 import { Product } from '@/types/product';
-import coffeeImg from '@/assets/coffee-1.jpg';
-import pastryImg from '@/assets/pastry-1.jpg';
-import mealImg from '@/assets/meal-1.jpg';
-import drinkImg from '@/assets/drink-1.jpg';
 
 export const products: Product[] = [
   {
@@ -11,7 +7,7 @@ export const products: Product[] = [
     description: 'Rich espresso with velvety steamed milk and perfect foam art',
     price: 2500,
     category: 'coffee',
-    image: coffeeImg,
+    image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?q=80&w=800&auto=format&fit=crop',
     featured: true,
   },
   {
@@ -20,7 +16,7 @@ export const products: Product[] = [
     description: 'Buttery, flaky croissant filled with premium dark chocolate',
     price: 1800,
     category: 'pastries',
-    image: pastryImg,
+    image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=800&auto=format&fit=crop',
     featured: true,
   },
   {
@@ -29,7 +25,7 @@ export const products: Product[] = [
     description: 'Fresh mixed greens with perfectly grilled chicken and house dressing',
     price: 4500,
     category: 'meals',
-    image: mealImg,
+    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&auto=format&fit=crop',
     featured: true,
   },
   {
@@ -38,7 +34,7 @@ export const products: Product[] = [
     description: 'Refreshing iced tea with tropical fruit infusion',
     price: 2000,
     category: 'beverages',
-    image: drinkImg,
+    image: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?q=80&w=800&auto=format&fit=crop',
     featured: true,
   },
   {
@@ -47,7 +43,7 @@ export const products: Product[] = [
     description: 'Smooth espresso with steamed milk, perfectly balanced',
     price: 2300,
     category: 'coffee',
-    image: coffeeImg,
+    image: 'https://images.unsplash.com/photo-1593443320739-77f74952dabd?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: '6',
@@ -55,7 +51,7 @@ export const products: Product[] = [
     description: 'Bold, concentrated coffee shot with rich crema',
     price: 1500,
     category: 'coffee',
-    image: coffeeImg,
+    image: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: '7',
@@ -63,7 +59,7 @@ export const products: Product[] = [
     description: 'Twice-baked Italian cookies, perfect with coffee',
     price: 1200,
     category: 'pastries',
-    image: pastryImg,
+    image: 'https://images.unsplash.com/photo-1599785209796-786432b228bc?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: '8',
@@ -71,7 +67,63 @@ export const products: Product[] = [
     description: 'Triple-decker sandwich with chicken, bacon, and fresh vegetables',
     price: 3800,
     category: 'meals',
-    image: mealImg,
+    image: 'https://images.unsplash.com/photo-1567234669003-dce7a7a88821?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    id: '9',
+    name: 'Beef Shawarma',
+    description: 'Tender spiced beef wrapped in warm pita with fresh veggies and tahini',
+    price: 3500,
+    category: 'meals',
+    image: 'https://images.unsplash.com/photo-1633321769754-05363f1f28b9?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    id: '10',
+    name: 'Chicken Shawarma',
+    description: 'Juicy marinated chicken wrapped in pita with garlic sauce',
+    price: 3200,
+    category: 'meals',
+    image: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    id: '11',
+    name: 'Classic Beef Burger',
+    description: 'Premium beef patty with cheese, lettuce, tomato, and secret sauce',
+    price: 4000,
+    category: 'meals',
+    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    id: '12',
+    name: 'Margherita Pizza',
+    description: 'Classic pizza with tomato sauce, fresh mozzarella, and basil',
+    price: 5500,
+    category: 'meals',
+    image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    id: '13',
+    name: 'Brown Sugar Boba Tea',
+    description: 'Creamy milk tea with chewy brown sugar tapioca pearls',
+    price: 3000,
+    category: 'beverages',
+    image: 'https://images.unsplash.com/photo-1558857563-b31cfc36fa67?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    id: '14',
+    name: 'Taro Bubble Tea',
+    description: 'Sweet and nutty taro milk tea with tapioca pearls',
+    price: 3000,
+    category: 'beverages',
+    image: 'https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    id: '15',
+    name: 'Iced Matcha Latte',
+    description: 'Premium Japanese matcha whisked with milk and ice',
+    price: 2800,
+    category: 'beverages',
+    image: 'https://images.unsplash.com/photo-1515823662972-da6a2e4d3114?q=80&w=800&auto=format&fit=crop',
   },
 ];
 

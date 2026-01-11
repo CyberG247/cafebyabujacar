@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,9 @@ const checkoutSchema = z.object({
     .trim()
     .email("Invalid email address")
     .max(255, "Email must be less than 255 characters")
-    .toLowerCase(),
+    .toLowerCase()
+    .optional()
+    .or(z.literal('')),
   
   phone: z.string()
     .trim()
@@ -43,6 +45,7 @@ const generateGuestToken = (): string => {
   crypto.getRandomValues(array);
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 };
+const SIMULATE_PAYMENT = import.meta.env.VITE_SIMULATE_PAYMENT === 'true';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -52,12 +55,14 @@ const Checkout = () => {
     email: '',
     phone: '',
     address: '',
+    orderNotes: '',
     deliveryOption: 'delivery',
   });
   const [showPayment, setShowPayment] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [orderData, setOrderData] = useState<any>(null);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const pendingOrderIdRef = useRef<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,18 +86,38 @@ const Checkout = () => {
       const deliveryFee = 500;
       const total = subtotal + deliveryFee;
 
+      if (SIMULATE_PAYMENT) {
+        // Generate a friendly demo order ID
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        const friendlyOrderId = `CAFE-ORD-2026-${randomNum}`;
+        const guestToken = generateGuestToken();
+        
+        sessionStorage.setItem(`order_${friendlyOrderId}_token`, guestToken);
+        setPendingOrderId(friendlyOrderId);
+        if (pendingOrderIdRef) pendingOrderIdRef.current = friendlyOrderId;
+        
+        // Store temp order data for receipt
+        sessionStorage.setItem(`order_${friendlyOrderId}_data`, JSON.stringify({
+           ...formData,
+           subtotal,
+           deliveryFee,
+           total
+        }));
+
+        setShowPayment(true);
+        return;
+      }
+
       console.log('Creating order with data:', { 
         name: formData.name, 
         email: formData.email,
+        notes: formData.orderNotes,
         subtotal, 
         deliveryFee, 
         total 
       });
 
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
-      
-      // Generate guest token if user is not authenticated
       const guestToken = !user ? generateGuestToken() : null;
 
       // Create order
@@ -105,6 +130,7 @@ const Checkout = () => {
           customer_email: formData.email,
           customer_phone: formData.phone,
           delivery_address: formData.address,
+          notes: formData.orderNotes,
           subtotal,
           delivery_fee: deliveryFee,
           total,
@@ -151,6 +177,7 @@ const Checkout = () => {
 
       // Store order ID for payment
       setPendingOrderId(order.id);
+      if (pendingOrderIdRef) pendingOrderIdRef.current = order.id;
       
       console.log('Opening payment dialog');
       
@@ -167,36 +194,55 @@ const Checkout = () => {
   };
 
   const handlePaymentSuccess = async (reference: string) => {
-    if (!pendingOrderId) return;
+    const currentOrderId = pendingOrderId || (pendingOrderIdRef ? pendingOrderIdRef.current : null);
+    
+    if (!currentOrderId) {
+      console.error('No pending order ID found');
+      toast({
+        title: 'Error',
+        description: 'Could not find order details. Please contact support.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
-      // Get guest token from sessionStorage
-      const guestToken = sessionStorage.getItem(`order_${pendingOrderId}_token`);
+      const guestToken = sessionStorage.getItem(`order_${currentOrderId}_token`);
       
-      // Use secure RPC function to update order status
-      const { data: success, error } = await supabase.rpc('update_order_payment_status', {
-        p_order_id: pendingOrderId,
-        p_guest_token: guestToken || '',
-        p_payment_status: 'paid',
-        p_status: 'confirmed'
-      });
+      const isPod = reference === 'PAY-ON-DELIVERY';
+      const isSimulated = reference.toString().startsWith('SIM-');
+      const paymentStatus = isPod ? 'pending' : 'paid';
+      
+      if (!SIMULATE_PAYMENT && !isSimulated && !currentOrderId.startsWith('CAFE-ORD-')) {
+        const { data: success, error } = await supabase.rpc('update_order_payment_status', {
+          p_order_id: currentOrderId,
+          p_guest_token: guestToken || '',
+          p_payment_status: paymentStatus,
+          p_status: 'confirmed'
+        });
 
-      if (error || !success) {
-        console.error('Payment update error:', error);
-        throw new Error('Failed to update order status');
+        if (error || !success) {
+          console.error('Payment update error:', error);
+          toast({
+             title: 'Note',
+             description: 'Order placed locally (Server sync failed).',
+             duration: 3000,
+          });
+        }
       }
 
       // Store tracking info in sessionStorage for the receipt
-      const guestTokenForTracking = sessionStorage.getItem(`order_${pendingOrderId}_token`);
+      const guestTokenForTracking = sessionStorage.getItem(`order_${currentOrderId}_token`);
       
       // Prepare receipt data
       const receiptData = {
-        orderId: pendingOrderId,
+        orderId: currentOrderId,
         guestToken: guestTokenForTracking,
         customerName: formData.name,
         customerEmail: formData.email,
         customerPhone: formData.phone,
         deliveryAddress: formData.address,
+        orderNotes: formData.orderNotes,
         items: cart.map(item => ({
           name: item.name,
           quantity: item.quantity,
@@ -205,7 +251,7 @@ const Checkout = () => {
         subtotal: getCartTotal(),
         deliveryFee: 500,
         total: getCartTotal() + 500,
-        paymentMethod: 'Paystack',
+        paymentMethod: isPod ? 'Pay on Delivery' : 'Paystack (Simulated)',
         date: new Date().toLocaleString('en-NG', {
           year: 'numeric',
           month: 'short',
@@ -213,7 +259,21 @@ const Checkout = () => {
           hour: '2-digit',
           minute: '2-digit',
         }),
+        status: 'confirmed', // Initial status for tracking
+        createdAt: new Date().toISOString(),
       };
+
+      // Save to local storage for tracking (simulating backend)
+      try {
+        const existingOrders = JSON.parse(localStorage.getItem('cafe_orders') || '[]');
+        // Check if order already exists to avoid duplicates
+        if (!existingOrders.some((o: any) => o.orderId === currentOrderId)) {
+          existingOrders.push(receiptData);
+          localStorage.setItem('cafe_orders', JSON.stringify(existingOrders));
+        }
+      } catch (e) {
+        console.error('Error saving order locally:', e);
+      }
 
       setOrderData(receiptData);
       setShowReceipt(true);
@@ -233,7 +293,7 @@ const Checkout = () => {
     navigate('/');
   };
 
-  if (cart.length === 0) {
+  if (cart.length === 0 && !showReceipt && !orderData) {
     navigate('/cart');
     return null;
   }
@@ -258,14 +318,13 @@ const Checkout = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">Email (Optional)</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="john@example.com"
-                  required
                 />
               </div>
               <div>
@@ -293,6 +352,16 @@ const Checkout = () => {
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   placeholder="Enter your delivery address"
                   required
+                />
+              </div>
+              <div>
+                <Label htmlFor="notes">Order Notes (Optional)</Label>
+                <textarea
+                  id="notes"
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={formData.orderNotes}
+                  onChange={(e) => setFormData({ ...formData, orderNotes: e.target.value })}
+                  placeholder="Any special instructions for delivery or preparation..."
                 />
               </div>
             </div>
@@ -341,7 +410,7 @@ const Checkout = () => {
           open={showPayment}
           onClose={() => setShowPayment(false)}
           amount={getCartTotal() + 500}
-          email={formData.email}
+          email={formData.email || 'guest@example.com'}
           name={formData.name}
           phone={formData.phone}
           onSuccess={handlePaymentSuccess}
@@ -355,6 +424,12 @@ const Checkout = () => {
             orderData={orderData}
           />
         )}
+        
+        <div className="mt-8 pt-6 border-t border-border text-center">
+          <p className="text-sm text-muted-foreground font-medium bg-muted/50 p-3 rounded-lg inline-block">
+            🚧 This is a demo application. Payments are simulated for demonstration purposes only.
+          </p>
+        </div>
       </div>
     </div>
   );

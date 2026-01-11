@@ -10,22 +10,19 @@ import { useToast } from '@/hooks/use-toast';
 type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'out_for_delivery' | 'delivered';
 
 interface Order {
-  id: string;
-  status: string;
-  payment_status: string;
-  customer_name: string;
-  delivery_address: string;
+  orderId: string;
+  status: OrderStatus;
+  paymentMethod: string;
+  customerName: string;
+  deliveryAddress: string;
   total: number;
-  created_at: string;
-  updated_at: string;
-}
-
-interface OrderItem {
-  id: string;
-  product_name: string;
-  quantity: number;
-  product_price: number;
-  subtotal: number;
+  createdAt: string;
+  date: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+  }>;
 }
 
 const statusSteps: { status: OrderStatus; label: string; icon: React.ElementType }[] = [
@@ -41,54 +38,37 @@ const getStatusIndex = (status: string): number => {
   return index >= 0 ? index : 0;
 };
 
+// Simulate status progression based on time elapsed
+const getSimulatedStatus = (createdAt: string): OrderStatus => {
+  const now = new Date();
+  const created = new Date(createdAt);
+  const diffInMinutes = (now.getTime() - created.getTime()) / 1000 / 60;
+
+  if (diffInMinutes < 2) return 'pending';
+  if (diffInMinutes < 10) return 'confirmed';
+  if (diffInMinutes < 25) return 'preparing';
+  if (diffInMinutes < 45) return 'out_for_delivery';
+  return 'delivered';
+};
+
 const TrackOrder = () => {
   const [searchParams] = useSearchParams();
   const [orderId, setOrderId] = useState(searchParams.get('id') || '');
-  const [token, setToken] = useState(searchParams.get('token') || '');
   const [order, setOrder] = useState<Order | null>(null);
-  const [items, setItems] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const { toast } = useToast();
 
   // Fetch order on mount if params provided
   useEffect(() => {
-    if (searchParams.get('id') && searchParams.get('token')) {
-      fetchOrder();
+    if (searchParams.get('id')) {
+      fetchOrder(searchParams.get('id') || '');
     }
   }, []);
 
-  // Realtime subscription
-  useEffect(() => {
-    if (!order) return;
-
-    const channel = supabase
-      .channel(`order-${order.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-          filter: `id=eq.${order.id}`,
-        },
-        (payload) => {
-          setOrder((prev) => (prev ? { ...prev, ...payload.new } : null));
-          toast({
-            title: 'Order Updated',
-            description: `Your order status is now: ${payload.new.status}`,
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [order?.id]);
-
-  const fetchOrder = async () => {
-    if (!orderId.trim()) {
+  const fetchOrder = async (searchId: string = orderId) => {
+    const targetId = searchId.trim();
+    if (!targetId) {
       toast({
         title: 'Order ID required',
         description: 'Please enter your order ID',
@@ -99,51 +79,42 @@ const TrackOrder = () => {
 
     setIsLoading(true);
     setHasSearched(true);
+    setOrder(null);
 
-    try {
-      // Try to get order using RPC function for guest orders
-      const { data: orderData, error: orderError } = await supabase.rpc('get_guest_order', {
-        p_order_id: orderId,
-        p_token: token || sessionStorage.getItem(`order_${orderId}_token`) || '',
-      });
+    // Simulate network delay
+    setTimeout(() => {
+      try {
+        const storedOrders = JSON.parse(localStorage.getItem('cafe_orders') || '[]');
+        const foundOrder = storedOrders.find((o: any) => o.orderId === targetId);
 
-      if (orderError) throw orderError;
-
-      if (!orderData || orderData.length === 0) {
-        setOrder(null);
+        if (foundOrder) {
+          // Update status based on time
+          const currentStatus = getSimulatedStatus(foundOrder.createdAt);
+          const updatedOrder = { ...foundOrder, status: currentStatus };
+          setOrder(updatedOrder);
+        } else {
+          toast({
+            title: 'Order not found',
+            description: 'Could not find an order with that ID.',
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching order:', error);
         toast({
-          title: 'Order not found',
-          description: 'Please check your order ID and try again',
+          title: 'Error',
+          description: 'Failed to fetch order details',
           variant: 'destructive',
         });
-        return;
+      } finally {
+        setIsLoading(false);
       }
-
-      setOrder(orderData[0]);
-
-      // Fetch order items
-      const { data: itemsData, error: itemsError } = await supabase.rpc('get_guest_order_items', {
-        p_order_id: orderId,
-        p_token: token || sessionStorage.getItem(`order_${orderId}_token`) || '',
-      });
-
-      if (!itemsError && itemsData) {
-        setItems(itemsData);
-      }
-    } catch (error) {
-      console.error('Error fetching order:', error);
-      setOrder(null);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch order details',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    }, 1000);
   };
 
-  const currentStatusIndex = order ? getStatusIndex(order.status || 'pending') : 0;
+  const handleSearch = () => fetchOrder(orderId);
+
+  const currentStatusIndex = order ? getStatusIndex(order.status) : 0;
 
   return (
     <div className="min-h-screen py-12">
@@ -163,18 +134,12 @@ const TrackOrder = () => {
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row gap-3">
               <Input
-                placeholder="Enter Order ID..."
+                placeholder="Enter Order ID (e.g. CAFE-ORD-2026-XXXX)"
                 value={orderId}
                 onChange={(e) => setOrderId(e.target.value)}
                 className="flex-1"
               />
-              <Input
-                placeholder="Token (if guest order)"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                className="flex-1"
-              />
-              <Button onClick={fetchOrder} disabled={isLoading}>
+              <Button onClick={handleSearch} disabled={isLoading}>
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -197,7 +162,7 @@ const TrackOrder = () => {
                 <CardTitle className="flex items-center justify-between">
                   <span>Order Status</span>
                   <span className="text-sm font-normal text-muted-foreground">
-                    #{order.id.slice(0, 8)}
+                    #{order.orderId}
                   </span>
                 </CardTitle>
               </CardHeader>
@@ -259,45 +224,33 @@ const TrackOrder = () => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Customer</p>
-                    <p className="font-semibold">{order.customer_name}</p>
+                    <p className="font-semibold">{order.customerName}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Delivery Address</p>
-                    <p className="font-semibold">{order.delivery_address}</p>
+                    <p className="font-semibold">{order.deliveryAddress}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Order Date</p>
                     <p className="font-semibold">
-                      {new Date(order.created_at).toLocaleDateString('en-NG', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {order.date}
                     </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Payment</p>
-                    <p
-                      className={`font-semibold ${
-                        order.payment_status === 'paid' ? 'text-green-600' : 'text-yellow-600'
-                      }`}
-                    >
-                      {order.payment_status === 'paid' ? 'Paid' : 'Pending'}
-                    </p>
+                    <p className="text-muted-foreground">Payment Method</p>
+                    <p className="font-semibold">{order.paymentMethod}</p>
                   </div>
                 </div>
 
-                {items.length > 0 && (
+                {order.items.length > 0 && (
                   <div className="border-t pt-4">
                     <p className="text-sm text-muted-foreground mb-2">Items</p>
-                    {items.map((item) => (
-                      <div key={item.id} className="flex justify-between text-sm py-1">
+                    {order.items.map((item, idx) => (
+                      <div key={idx} className="flex justify-between text-sm py-1">
                         <span>
-                          {item.product_name} x{item.quantity}
+                          {item.name} x{item.quantity}
                         </span>
-                        <span className="font-semibold">₦{item.subtotal.toLocaleString()}</span>
+                        <span className="font-semibold">₦{(item.price * item.quantity).toLocaleString()}</span>
                       </div>
                     ))}
                     <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
@@ -318,7 +271,7 @@ const TrackOrder = () => {
               <AlertCircle className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h2 className="font-serif text-2xl font-semibold mb-2">Order not found</h2>
               <p className="text-muted-foreground mb-6">
-                Please check your order ID and token, then try again
+                Please check your order ID and try again.
               </p>
               <Link to="/menu">
                 <Button variant="hero">Browse Menu</Button>

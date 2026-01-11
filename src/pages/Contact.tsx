@@ -24,11 +24,11 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen py-12">
+    <div className="min-h-screen py-8 md:py-12">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="font-serif text-5xl font-bold mb-4">Contact Us</h1>
+            <h1 className="font-serif text-3xl md:text-5xl font-bold mb-4">Contact Us</h1>
             <p className="text-lg text-muted-foreground">
               We'd love to hear from you. Get in touch with us today.
             </p>
